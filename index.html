@@ -1,19 +1,16 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
 
-<metaname="viewport"content="width=device-width, initial-scale=1.0"
-
-
-
-이 코드에서 핀 찍을때 색이랑 이름 매겨서 지도에 그대로 표시되는 기능 추가해줘
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>삿포로 여행 지도</title>
 
   <!-- Leaflet 지도 CSS -->
-
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -85,19 +82,43 @@
       font-weight: 600;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
       width: 100%;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 8px;
       background: white;
+      font-family: inherit;
       font-size: 14px;
     }
 
-    .form-group input:focus {
+    .form-group input:focus,
+    .form-group select:focus {
       border-color: #0f766e;
       outline: none;
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    /* 색상 선택 영역 */
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-row select {
+      flex: 1;
+    }
+
+    .color-preview {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 42px;
+      border: 2px solid white;
+      border-radius: 10px;
+      background: #ea580c;
+      box-shadow: 0 0 0 1px #ccc;
     }
 
     .submit-btn {
@@ -149,7 +170,6 @@
       height: 34px;
       border: 3px solid white;
       border-radius: 50% 50% 50% 0;
-      background: #ea580c;
       box-shadow: 0 3px 9px rgba(0, 0, 0, 0.35);
       transform: rotate(-45deg);
     }
@@ -161,6 +181,28 @@
       transform: rotate(45deg);
     }
 
+    /*
+      지도에 항상 표시되는 장소명 라벨
+    */
+    .place-name-label {
+      padding: 4px 8px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.94);
+      color: #222;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /*
+      Leaflet 툴팁 기본 화살표 제거
+    */
+    .place-name-label::before {
+      display: none;
+    }
+
     /* 팝업 */
     .popup-box {
       min-width: 170px;
@@ -170,6 +212,22 @@
       margin-bottom: 5px;
       font-size: 15px;
       font-weight: 700;
+    }
+
+    .popup-color {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 7px;
+      color: #666;
+      font-size: 11px;
+    }
+
+    .popup-color-dot {
+      width: 10px;
+      height: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 50%;
     }
 
     .popup-coords {
@@ -232,103 +290,150 @@
       .add-form {
         padding: 13px;
       }
+
+      .place-name-label {
+        padding: 3px 6px;
+        font-size: 11px;
+      }
     }
   </style>
-
 </head>
 
 <body>
   <main class="container">
     <h1>📍 삿포로 여행 지도</h1>
 
-<p class="description">
-  장소명과 구글 지도 링크를 입력하면 링크에서 좌표를 읽어 지도에 핀을 표시합니다.
-</p>
+    <p class="description">
+      장소명, 핀 색상, 구글 지도 링크를 입력하면 지도에 장소명과 색상 핀이 표시됩니다.
+    </p>
 
-<!-- 핀 추가 폼 -->
-<section class="add-form">
-  <div class="form-title">핀 추가하기</div>
+    <!-- 핀 추가 폼 -->
+    <section class="add-form">
+      <div class="form-title">핀 추가하기</div>
 
-  <form id="pin-form">
-    <div class="form-group">
-      <label for="pin-name">장소명</label>
+      <form id="pin-form">
 
-      <input
-        type="text"
-        id="pin-name"
-        placeholder="예: 니조시장"
-        required
-      >
-    </div>
+        <div class="form-group">
+          <label for="pin-name">장소명</label>
 
-    <div class="form-group">
-      <label for="pin-google">
-        구글 지도 링크
-      </label>
+          <input
+            type="text"
+            id="pin-name"
+            placeholder="예: 니조시장"
+            required
+          >
+        </div>
 
-      <input
-        type="text"
-        id="pin-google"
-        placeholder="https://www.google.com/maps/place/..."
-        required
-      >
-    </div>
+        <!-- 핀 색상 선택 -->
+        <div class="form-group">
+          <label for="pin-color">핀 색상</label>
 
-    <div class="form-group">
-      <label for="pin-notion">
-        노션 토글 또는 블록 링크
-      </label>
+          <div class="color-row">
+            <select id="pin-color">
+              <option value="#ea580c">
+                주황색
+              </option>
 
-      <input
-        type="url"
-        id="pin-notion"
-        placeholder="https://www.notion.so/..."
-        required
-      >
-    </div>
+              <option value="#dc2626">
+                빨간색
+              </option>
 
-    <button
-      type="submit"
-      class="submit-btn"
-    >
-      구글 지도 링크로 핀 추가
-    </button>
-  </form>
+              <option value="#2563eb">
+                파란색
+              </option>
 
-  <div class="guide">
-    <strong>링크가 등록되지 않을 때</strong><br>
-    `maps.app.goo.gl`로 시작하는 짧은 링크는 크롬에서 먼저 여세요.
-    장소 화면이 열리면 주소창의
-    `google.com/maps/...` 긴 주소를 다시 복사해서 넣으면 됩니다.
-  </div>
-</section>
+              <option value="#7c3aed">
+                보라색
+              </option>
 
-<!-- 지도 -->
-<div id="map"></div>
+              <option value="#db2777">
+                분홍색
+              </option>
 
+              <option value="#16a34a">
+                초록색
+              </option>
+
+              <option value="#0f766e">
+                청록색
+              </option>
+
+              <option value="#111827">
+                검정색
+              </option>
+            </select>
+
+            <div
+              id="color-preview"
+              class="color-preview"
+              aria-label="선택한 핀 색상"
+            ></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pin-google">
+            구글 지도 링크
+          </label>
+
+          <input
+            type="text"
+            id="pin-google"
+            placeholder="https://www.google.com/maps/place/..."
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="pin-notion">
+            노션 토글 또는 블록 링크
+          </label>
+
+          <input
+            type="url"
+            id="pin-notion"
+            placeholder="https://www.notion.so/..."
+            required
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="submit-btn"
+        >
+          색상 핀 추가
+        </button>
+      </form>
+
+      <div class="guide">
+        <strong>링크가 등록되지 않을 때</strong><br>
+        `maps.app.goo.gl`로 시작하는 짧은 링크는 크롬에서 먼저 여세요.
+        장소 화면이 열린 다음 주소창의
+        `google.com/maps/...` 긴 주소를 복사해 넣어야 합니다.
+      </div>
+    </section>
+
+    <!-- 지도 -->
+    <div id="map"></div>
   </main>
 
   <!-- Leaflet 지도 JS -->
-
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   ></script>
 
   <script>
     /*
-      나카시노마역 중심 좌표
+      오도리역 중심 좌표
     */
-    const odoriStation = [43.03824051746631, 141.36130319644906];
+    const odoriStation = [43.037876410406795, 141.3610037533418];
 
     /*
       고정 지도 생성
-
-      이동, 확대, 축소를 모두 막아
-      사진처럼 고정된 상태로 표시
     */
     const map = L.map("map", {
       center: odoriStation,
-      zoom: 14,
+      zoom: 18,
 
       zoomControl: false,
       dragging: false,
@@ -347,35 +452,45 @@
     L.tileLayer(
       "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
-        maxZoom: 19,
+        maxZoom: 25,
+
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }
     ).addTo(map);
 
     /*
-      커스텀 핀 아이콘
+      선택한 색상으로 핀 아이콘 생성
     */
-    const customPinIcon = L.divIcon({
-      className: "custom-pin-wrapper",
+    function createPinIcon(color) {
+      const safeColor =
+        /^#[0-9a-fA-F]{6}$/.test(color)
+          ? color
+          : "#ea580c";
 
-      html: `
-        <div class="custom-pin">
-          <span>●</span>
-        </div>
-      `,
+      return L.divIcon({
+        className: "custom-pin-wrapper",
 
-      iconSize: [34, 34],
-      iconAnchor: [17, 34],
-      popupAnchor: [0, -34]
-    });
+        html: `
+          <div
+            class="custom-pin"
+            style="background:${safeColor};"
+          >
+            <span>●</span>
+          </div>
+        `,
+
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+        popupAnchor: [0, -34]
+      });
+    }
 
     /*
-      HTML에 특수문자가 들어가도
-      화면이 깨지지 않게 처리
+      HTML 특수문자 처리
     */
     function escapeHtml(text) {
-      return String(text)
+      return String(text ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -385,25 +500,13 @@
 
     /*
       구글 지도 URL에서 좌표 추출
-
-      지원하는 대표 주소 형식:
-
-      /@43.0573,141.3603,17z
-
-      !3d43.0573!4d141.3603
-
-      ?q=43.0573,141.3603
-
-      ?query=43.0573,141.3603
     */
     function extractCoordinatesFromGoogleMapsUrl(inputUrl) {
       let decodedUrl = inputUrl.trim();
 
-      /*
-        URL 안의 %2C 같은 값을 쉼표로 변환
-      */
       try {
-        decodedUrl = decodeURIComponent(decodedUrl);
+        decodedUrl =
+          decodeURIComponent(decodedUrl);
       } catch (error) {
         console.warn(
           "URL 디코딩을 건너뜁니다.",
@@ -413,46 +516,44 @@
 
       const patterns = [
         /*
-          예:
           /@43.0573,141.3603,17z
         */
         /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
 
         /*
-          예:
           !3d43.0573!4d141.3603
         */
         /!3d(-?\d+(?:\.\d+)?).*?!4d(-?\d+(?:\.\d+)?)/,
 
         /*
-          예:
           ?q=43.0573,141.3603
-          &q=43.0573,141.3603
         */
         /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
 
         /*
-          예:
           ?query=43.0573,141.3603
         */
         /[?&]query=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
 
         /*
-          링크 대신 좌표만 붙여 넣어도 허용
-          예: 43.0573, 141.3603
+          좌표만 붙여넣기
         */
         /^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/
       ];
 
       for (const pattern of patterns) {
-        const match = decodedUrl.match(pattern);
+        const match =
+          decodedUrl.match(pattern);
 
         if (!match) {
           continue;
         }
 
-        const lat = Number.parseFloat(match[1]);
-        const lng = Number.parseFloat(match[2]);
+        const lat =
+          Number.parseFloat(match[1]);
+
+        const lng =
+          Number.parseFloat(match[2]);
 
         if (
           Number.isFinite(lat) &&
@@ -469,7 +570,7 @@
     }
 
     /*
-      핀 자료를 브라우저에 저장
+      핀 자료 저장
     */
     function savePins(pins) {
       localStorage.setItem(
@@ -509,16 +610,37 @@
     const markerMap = new Map();
 
     /*
-      핀 하나를 지도에 생성
+      핀 생성
     */
     function createMarker(pin) {
+      /*
+        기존 저장 데이터에는 색상이 없을 수 있으므로
+        기본값을 주황색으로 설정
+      */
+      const pinColor =
+        pin.color || "#ea580c";
+
       const marker = L.marker(
         [pin.lat, pin.lng],
         {
-          icon: customPinIcon,
+          icon: createPinIcon(pinColor),
           title: pin.name
         }
       ).addTo(map);
+
+      /*
+        장소명을 지도에 항상 표시
+      */
+      marker.bindTooltip(
+        escapeHtml(pin.name),
+        {
+          permanent: true,
+          direction: "right",
+          offset: [16, -16],
+          className: "place-name-label",
+          opacity: 1
+        }
+      );
 
       const safeName =
         escapeHtml(pin.name);
@@ -529,10 +651,24 @@
       const safeNotionUrl =
         escapeHtml(pin.notionUrl);
 
+      const safeColor =
+        /^#[0-9a-fA-F]{6}$/.test(pinColor)
+          ? pinColor
+          : "#ea580c";
+
       marker.bindPopup(`
         <div class="popup-box">
           <div class="popup-title">
             ${safeName}
+          </div>
+
+          <div class="popup-color">
+            <span
+              class="popup-color-dot"
+              style="background:${safeColor};"
+            ></span>
+
+            선택한 핀 색상
           </div>
 
           <div class="popup-coords">
@@ -602,7 +738,7 @@
     };
 
     /*
-      기존에 저장된 핀 불러오기
+      저장된 핀 불러오기
     */
     const existingPins = loadPins();
 
@@ -611,7 +747,28 @@
     });
 
     /*
-      입력 폼 제출
+      색상 선택 미리보기
+    */
+    const colorSelect =
+      document.getElementById("pin-color");
+
+    const colorPreview =
+      document.getElementById("color-preview");
+
+    function updateColorPreview() {
+      colorPreview.style.background =
+        colorSelect.value;
+    }
+
+    colorSelect.addEventListener(
+      "change",
+      updateColorPreview
+    );
+
+    updateColorPreview();
+
+    /*
+      폼 제출
     */
     document
       .getElementById("pin-form")
@@ -625,6 +782,11 @@
               .getElementById("pin-name")
               .value
               .trim();
+
+          const color =
+            document
+              .getElementById("pin-color")
+              .value;
 
           const googleUrl =
             document
@@ -653,8 +815,8 @@
               )
             ) {
               alert(
-                "구글 지도 앱의 짧은 링크에서는 좌표를 읽을 수 없습니다.\n\n" +
-                "1. 이 링크를 크롬에서 여세요.\n" +
+                "짧은 구글 지도 링크에서는 좌표를 읽을 수 없습니다.\n\n" +
+                "1. 링크를 크롬에서 여세요.\n" +
                 "2. 장소가 열린 뒤 주소창의 긴 google.com/maps 주소를 복사하세요.\n" +
                 "3. 그 주소를 다시 입력해주세요."
               );
@@ -668,11 +830,14 @@
             return;
           }
 
-          const lat = coordinates.lat;
-          const lng = coordinates.lng;
+          const lat =
+            coordinates.lat;
+
+          const lng =
+            coordinates.lng;
 
           /*
-            위·경도 기본 범위 확인
+            좌표 범위 확인
           */
           if (
             lat < -90 ||
@@ -688,7 +853,7 @@
           }
 
           /*
-            삿포로와 너무 먼 곳이면 확인
+            삿포로와 너무 먼 좌표 확인
           */
           if (
             lat < 42.5 ||
@@ -714,13 +879,15 @@
                 .slice(2),
 
             name: name,
+            color: color,
             googleUrl: googleUrl,
             notionUrl: notionUrl,
             lat: lat,
             lng: lng
           };
 
-          const savedPins = loadPins();
+          const savedPins =
+            loadPins();
 
           savedPins.push(newPin);
 
@@ -729,7 +896,7 @@
           createMarker(newPin);
 
           /*
-            지도는 고정하고 새 핀의 팝업만 표시
+            새 핀의 팝업 열기
           */
           const newMarker =
             markerMap.get(newPin.id);
@@ -738,10 +905,20 @@
             newMarker.openPopup();
           }
 
+          /*
+            폼 초기화
+          */
           this.reset();
+
+          /*
+            색상 선택 초기값을 주황색으로 복구
+          */
+          colorSelect.value =
+            "#ea580c";
+
+          updateColorPreview();
         }
       );
   </script>
-
 </body>
 </html>
