@@ -685,6 +685,10 @@ mapTiles.addTo(map);
       }
     );
 
+    window.setTimeout(() => {
+  map.invalidateSize();
+}, 300);
+
     /*
       나카노시마역 기준 핀
     */
