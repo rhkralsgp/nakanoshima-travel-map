@@ -1,16 +1,19 @@
-<!DOCTYPE html>
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>삿포로 여행 지도 (나카노시마역 중심)</title>
-  
+
+  <title>오사카 나카노시마 여행 지도</title>
+
   <!-- Leaflet 지도 CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   >
-  
+
   <style>
     * {
       box-sizing: border-box;
@@ -77,7 +80,8 @@
       font-weight: 600;
     }
 
-    .form-group input, .form-group select {
+    .form-group input,
+    .form-group select {
       width: 100%;
       padding: 10px;
       border: 1px solid #ccc;
@@ -86,7 +90,8 @@
       font-size: 14px;
     }
 
-    .form-group input:focus, .form-group select:focus {
+    .form-group input:focus,
+    .form-group select:focus {
       border-color: #0f766e;
       outline: none;
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
@@ -132,7 +137,39 @@
       background: #eee;
     }
 
-    /* 📍 지도 커스텀 핀 & 이름 라벨 스타일 */
+    /* 기준역 표시 */
+    .station-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border: 3px solid white;
+      border-radius: 50%;
+      background: #111827;
+      color: white;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .station-label {
+      padding: 4px 8px;
+      border: 0;
+      border-radius: 6px;
+      background: #111827;
+      color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .station-label::before {
+      display: none;
+    }
+
+    /* 지도 커스텀 핀과 이름 라벨 */
     .custom-pin-container {
       display: flex;
       align-items: center;
@@ -160,16 +197,15 @@
       transform: rotate(45deg);
     }
 
-    /* 지도 상에 표시되는 장소 이름 태그 */
     .pin-label {
+      padding: 3px 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
       background: rgba(255, 255, 255, 0.95);
       color: #222;
-      padding: 3px 8px;
-      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
       font-size: 12px;
       font-weight: 700;
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
       pointer-events: none;
     }
 
@@ -244,15 +280,22 @@
       .add-form {
         padding: 13px;
       }
+
+      .pin-label,
+      .station-label {
+        font-size: 10px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main class="container">
-    <h1>📍 삿포로 여행 지도</h1>
+    <h1>📍 오사카 나카노시마 여행 지도</h1>
 
     <p class="description">
-      장소명과 구글 지도 링크를 입력하면 지도에 핀과 장소 이름이 바로 표시됩니다.
+      오사카 나카노시마역을 지도 중앙에 고정했습니다.
+      장소명과 구글 지도 링크를 입력하면 핀과 장소명이 표시됩니다.
     </p>
 
     <!-- 핀 추가 폼 -->
@@ -262,17 +305,18 @@
       <form id="pin-form">
         <div class="form-group">
           <label for="pin-name">장소명</label>
+
           <input
             type="text"
             id="pin-name"
-            placeholder="예: 나카노시마 공원"
+            placeholder="예: 오사카시립과학관"
             required
           >
         </div>
 
-        <!-- 핀 색상 선택 -->
         <div class="form-group">
           <label for="pin-color">핀 색상</label>
+
           <select id="pin-color">
             <option value="#ea580c">🍊 주황색 (기본)</option>
             <option value="#2563eb">🔵 파란색 (관광/명소)</option>
@@ -283,22 +327,23 @@
         </div>
 
         <div class="form-group">
-          <label for="pin-google">구글 지도 링크</label>
+          <label for="pin-google">구글 지도 링크 또는 위도·경도</label>
+
           <input
             type="text"
             id="pin-google"
-            placeholder="https://www.google.com/maps/place/..."
+            placeholder="google.com/maps/... 또는 34.6911, 135.4870"
             required
           >
         </div>
 
         <div class="form-group">
           <label for="pin-notion">노션 토글 또는 블록 링크</label>
+
           <input
             type="url"
             id="pin-notion"
-            placeholder="https://www.notion.so/..."
-            required
+            placeholder="선택사항: https://www.notion.so/..."
           >
         </div>
 
@@ -310,7 +355,7 @@
       <div class="guide">
         <strong>링크가 등록되지 않을 때</strong><br>
         `maps.app.goo.gl`로 시작하는 짧은 링크는 크롬에서 먼저 여세요.
-        장소 화면이 열리면 주소창의 `google.com/maps/...` 긴 주소를 다시 복사해서 넣으면 됩니다.
+        장소가 열린 뒤 주소창의 긴 `google.com/maps/...` 주소를 복사해 넣으면 됩니다.
       </div>
     </section>
 
@@ -320,15 +365,28 @@
 
   <!-- Leaflet 지도 JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <script>
-    /* 📍 구글 지도 기준 나카노시마역 정확한 중심 좌표 (위도: 43.03728, 경도: 141.36222) */
-    const nakanoshimaStationCenter = [43.03728, 141.36222];
 
-    /* 고정 지도 생성 (지도 한가운데 나카노시마역 위치 지정 및 이동 차단) */
+  <script>
+    /*
+      사용자가 보낸 구글 지도 주소의 실제 장소 좌표:
+      !3d34.6911062!4d135.4870336
+    */
+    const nakanoshimaStationCenter = [
+      34.6911062,
+      135.4870336
+    ];
+
+    const fixedZoom = 17;
+
+    /*
+      지도 이동, 확대, 축소를 모두 차단
+    */
     const map = L.map("map", {
       center: nakanoshimaStationCenter,
-      zoom: 14,
+      zoom: fixedZoom,
+      minZoom: fixedZoom,
+      maxZoom: fixedZoom,
+
       zoomControl: false,
       dragging: false,
       scrollWheelZoom: false,
@@ -336,36 +394,149 @@
       touchZoom: false,
       boxZoom: false,
       keyboard: false,
+      tap: false,
+
       attributionControl: true
     });
 
-    /* OpenStreetMap 지도 표시 */
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
+    /*
+      CARTO 지도 타일 사용
+      OpenStreetMap 기본 타일이 회색으로 표시되는 환경을 피하기 위한 설정
+    */
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      {
+        subdomains: "abcd",
+        minZoom: fixedZoom,
+        maxZoom: fixedZoom,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }
+    ).addTo(map);
 
-    /* 커스텀 핀 아이콘 생성 함수 */
+    /*
+      화면 크기가 정해진 뒤 중심을 다시 고정
+    */
+    window.setTimeout(() => {
+      map.invalidateSize();
+      map.setView(
+        nakanoshimaStationCenter,
+        fixedZoom,
+        { animate: false }
+      );
+    }, 300);
+
+    /*
+      혹시 외부 요인으로 지도가 움직여도 즉시 원위치
+    */
+    map.on("moveend", () => {
+      const center = map.getCenter();
+      const isMoved =
+        Math.abs(center.lat - nakanoshimaStationCenter[0]) > 0.000001 ||
+        Math.abs(center.lng - nakanoshimaStationCenter[1]) > 0.000001 ||
+        map.getZoom() !== fixedZoom;
+
+      if (isMoved) {
+        map.setView(
+          nakanoshimaStationCenter,
+          fixedZoom,
+          { animate: false }
+        );
+      }
+    });
+
+    /*
+      나카노시마역 기준점 표시
+    */
+    const stationIcon = L.divIcon({
+      className: "station-marker-wrapper",
+      html: '<div class="station-marker">역</div>',
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+      popupAnchor: [0, -20]
+    });
+
+    const stationMarker = L.marker(
+      nakanoshimaStationCenter,
+      {
+        icon: stationIcon,
+        title: "나카노시마역",
+        zIndexOffset: 1000
+      }
+    ).addTo(map);
+
+    stationMarker.bindTooltip(
+      "나카노시마역",
+      {
+        permanent: true,
+        direction: "right",
+        offset: [22, 0],
+        className: "station-label",
+        opacity: 1
+      }
+    );
+
+    stationMarker.bindPopup(
+      `
+        <div class="popup-box">
+          <div class="popup-title">나카노시마역</div>
+
+          <div class="popup-coords">
+            34.6911062, 135.4870336
+          </div>
+
+          <a
+            href="https://www.google.com/maps/place/%EB%82%98%EC%B9%B4%EB%85%B8%EC%8B%9C%EB%A7%88+%EC%97%AD/@34.6911106,135.4844533,17z/data=!3m1!4b1!4m6!3m5!1s0x6000e658b2b29d19:0xe56ff9f91535ee5!8m2!3d34.6911062!4d135.4870336!16s%2Fm%2F04q6v7_?entry=ttu"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="popup-link google-btn"
+          >
+            구글 지도에서 열기
+          </a>
+        </div>
+      `,
+      {
+        autoPan: false
+      }
+    );
+
+    /*
+      커스텀 핀 아이콘 생성
+    */
     function createCustomIcon(color, name) {
+      const safeColor =
+        /^#[0-9a-fA-F]{6}$/.test(color)
+          ? color
+          : "#ea580c";
+
       const safeName = escapeHtml(name);
+
       return L.divIcon({
         className: "custom-pin-wrapper",
+
         html: `
           <div class="custom-pin-container">
-            <div class="custom-pin" style="background: ${color};">
+            <div
+              class="custom-pin"
+              style="background:${safeColor};"
+            >
               <span>●</span>
             </div>
-            <div class="pin-label">${safeName}</div>
+
+            <div class="pin-label">
+              ${safeName}
+            </div>
           </div>
         `,
-        iconSize: [120, 32],
+
+        iconSize: [150, 32],
         iconAnchor: [16, 32],
         popupAnchor: [0, -32]
       });
     }
 
     function escapeHtml(text) {
-      return String(text)
+      return String(text ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -373,17 +544,21 @@
         .replaceAll("'", "&#039;");
     }
 
+    /*
+      구글 지도 URL 또는 좌표에서 위도·경도 추출
+    */
     function extractCoordinatesFromGoogleMapsUrl(inputUrl) {
       let decodedUrl = inputUrl.trim();
+
       try {
         decodedUrl = decodeURIComponent(decodedUrl);
       } catch (error) {
-        console.warn("URL 디코딩 건너뜀", error);
+        console.warn("URL 디코딩을 건너뜁니다.", error);
       }
 
       const patterns = [
-        /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
         /!3d(-?\d+(?:\.\d+)?).*?!4d(-?\d+(?:\.\d+)?)/,
+        /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
         /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
         /[?&]query=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
         /^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/
@@ -391,127 +566,337 @@
 
       for (const pattern of patterns) {
         const match = decodedUrl.match(pattern);
-        if (match) {
-          const lat = Number.parseFloat(match[1]);
-          const lng = Number.parseFloat(match[2]);
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            return { lat, lng };
-          }
+
+        if (!match) {
+          continue;
+        }
+
+        const lat = Number.parseFloat(match[1]);
+        const lng = Number.parseFloat(match[2]);
+
+        if (
+          Number.isFinite(lat) &&
+          Number.isFinite(lng) &&
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180
+        ) {
+          return { lat, lng };
         }
       }
+
       return null;
     }
 
+    /*
+      브라우저 저장
+      같은 웹주소와 같은 브라우저에서 새로고침해도 유지
+    */
+    const storageKey =
+      "osakaNakanoshimaPinsV1";
+
     function savePins(pins) {
-      localStorage.setItem("sapporoPinsFromGoogleMaps", JSON.stringify(pins));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify(pins)
+      );
     }
 
     function loadPins() {
-      const savedPins = localStorage.getItem("sapporoPinsFromGoogleMaps");
-      if (!savedPins) return [];
+      const savedPins =
+        localStorage.getItem(storageKey);
+
+      if (!savedPins) {
+        return [];
+      }
+
       try {
-        return JSON.parse(savedPins);
+        const parsedPins =
+          JSON.parse(savedPins);
+
+        return Array.isArray(parsedPins)
+          ? parsedPins
+          : [];
       } catch (error) {
+        console.error(
+          "저장된 핀을 불러오지 못했습니다.",
+          error
+        );
+
         return [];
       }
     }
 
     const markerMap = new Map();
 
-    /* 핀 하나를 지도에 생성 */
+    /*
+      핀 하나를 지도에 표시
+    */
     function createMarker(pin) {
-      const pinColor = pin.color || "#ea580c";
-      const icon = createCustomIcon(pinColor, pin.name);
+      const icon =
+        createCustomIcon(
+          pin.color || "#ea580c",
+          pin.name
+        );
 
-      const marker = L.marker([pin.lat, pin.lng], {
-        icon: icon,
-        title: pin.name
-      }).addTo(map);
+      const marker = L.marker(
+        [pin.lat, pin.lng],
+        {
+          icon,
+          title: pin.name
+        }
+      ).addTo(map);
 
-      const safeName = escapeHtml(pin.name);
-      const safeGoogleUrl = escapeHtml(pin.googleUrl);
-      const safeNotionUrl = escapeHtml(pin.notionUrl);
+      const safeName =
+        escapeHtml(pin.name);
 
-      /* autoPan: false 설정으로 팝업이 열릴 때 지도가 중앙에서 벗어나는 것을 차단 */
-      marker.bindPopup(`
-        <div class="popup-box">
-          <div class="popup-title">${safeName}</div>
-          <div class="popup-coords">${pin.lat}, ${pin.lng}</div>
-          <a href="${safeGoogleUrl}" target="_blank" rel="noopener noreferrer" class="popup-link google-btn">구글 지도에서 열기</a>
-          <a href="${safeNotionUrl}" target="_blank" rel="noopener noreferrer" class="popup-link notion-btn">노션 설명으로 이동</a>
-          <button type="button" class="delete-btn" onclick="deletePin('${pin.id}')">이 핀 삭제</button>
-        </div>
-      `, {
-        autoPan: false
+      const safeGoogleUrl =
+        escapeHtml(pin.googleUrl);
+
+      const safeNotionUrl =
+        escapeHtml(pin.notionUrl);
+
+      const notionButton =
+        safeNotionUrl
+          ? `
+            <a
+              href="${safeNotionUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="popup-link notion-btn"
+            >
+              노션 설명으로 이동
+            </a>
+          `
+          : "";
+
+      marker.bindPopup(
+        `
+          <div class="popup-box">
+            <div class="popup-title">
+              ${safeName}
+            </div>
+
+            <div class="popup-coords">
+              ${pin.lat}, ${pin.lng}
+            </div>
+
+            <a
+              href="${safeGoogleUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="popup-link google-btn"
+            >
+              구글 지도에서 열기
+            </a>
+
+            ${notionButton}
+
+            <button
+              type="button"
+              class="delete-btn"
+              data-pin-id="${pin.id}"
+            >
+              이 핀 삭제
+            </button>
+          </div>
+        `,
+        {
+          autoPan: false
+        }
+      );
+
+      marker.on("popupopen", (event) => {
+        const popupElement =
+          event.popup.getElement();
+
+        const deleteButton =
+          popupElement?.querySelector(
+            ".delete-btn"
+          );
+
+        if (deleteButton) {
+          deleteButton.addEventListener(
+            "click",
+            () => {
+              deletePin(pin.id);
+            },
+            { once: true }
+          );
+        }
+
+        /*
+          팝업을 열어도 지도 중심은 그대로 유지
+        */
+        map.setView(
+          nakanoshimaStationCenter,
+          fixedZoom,
+          { animate: false }
+        );
       });
 
-      markerMap.set(pin.id, marker);
+      markerMap.set(
+        pin.id,
+        marker
+      );
     }
 
-    /* 핀 삭제 */
-    window.deletePin = function(pinId) {
-      if (!window.confirm("이 핀을 지도에서 삭제할까요?")) return;
-
-      const savedPins = loadPins();
-      const updatedPins = savedPins.filter((pin) => pin.id !== pinId);
-
-      savePins(updatedPins);
-
-      const marker = markerMap.get(pinId);
-      if (marker) {
-        map.removeLayer(marker);
-        markerMap.delete(pinId);
-      }
-    };
-
-    /* 기존 핀 로드 */
-    const existingPins = loadPins();
-    existingPins.forEach((pin) => createMarker(pin));
-
-    /* 폼 제출 핸들러 */
-    document.getElementById("pin-form").addEventListener("submit", function(event) {
-      event.preventDefault();
-
-      const name = document.getElementById("pin-name").value.trim();
-      const color = document.getElementById("pin-color").value;
-      const googleUrl = document.getElementById("pin-google").value.trim();
-      const notionUrl = document.getElementById("pin-notion").value.trim();
-
-      const coordinates = extractCoordinatesFromGoogleMapsUrl(googleUrl);
-
-      if (!coordinates) {
-        alert(googleUrl.includes("maps.app.goo.gl") 
-          ? "구글 지도 앱의 짧은 링크는 크롬에서 연 후 긴 주소로 복사해주세요." 
-          : "링크에서 좌표를 찾을 수 없습니다.");
+    /*
+      핀 삭제
+    */
+    function deletePin(pinId) {
+      if (
+        !window.confirm(
+          "이 핀을 지도에서 삭제할까요?"
+        )
+      ) {
         return;
       }
 
-      const { lat, lng } = coordinates;
+      const savedPins =
+        loadPins();
 
-      const newPin = {
-        id: Date.now().toString() + Math.random().toString(16).slice(2),
-        name: name,
-        color: color,
-        googleUrl: googleUrl,
-        notionUrl: notionUrl,
-        lat: lat,
-        lng: lng
-      };
+      const updatedPins =
+        savedPins.filter(
+          (pin) => pin.id !== pinId
+        );
 
-      const savedPins = loadPins();
-      savedPins.push(newPin);
-      savePins(savedPins);
+      savePins(updatedPins);
 
-      createMarker(newPin);
+      const marker =
+        markerMap.get(pinId);
 
-      /* 새 핀 추가 시에도 지도는 나카노시마역 한가운데에 유지 */
-      const newMarker = markerMap.get(newPin.id);
-      if (newMarker) {
-        newMarker.openPopup();
+      if (marker) {
+        map.closePopup();
+        map.removeLayer(marker);
+        markerMap.delete(pinId);
       }
 
-      this.reset();
+      map.setView(
+        nakanoshimaStationCenter,
+        fixedZoom,
+        { animate: false }
+      );
+    }
+
+    /*
+      기존 저장 핀 불러오기
+    */
+    loadPins().forEach((pin) => {
+      createMarker(pin);
     });
+
+    /*
+      새 핀 추가
+    */
+    document
+      .getElementById("pin-form")
+      .addEventListener(
+        "submit",
+        function(event) {
+          event.preventDefault();
+
+          const name =
+            document
+              .getElementById("pin-name")
+              .value
+              .trim();
+
+          const color =
+            document
+              .getElementById("pin-color")
+              .value;
+
+          const googleUrl =
+            document
+              .getElementById("pin-google")
+              .value
+              .trim();
+
+          const notionUrl =
+            document
+              .getElementById("pin-notion")
+              .value
+              .trim();
+
+          const coordinates =
+            extractCoordinatesFromGoogleMapsUrl(
+              googleUrl
+            );
+
+          if (!coordinates) {
+            if (
+              googleUrl.includes(
+                "maps.app.goo.gl"
+              )
+            ) {
+              alert(
+                "구글 지도 앱의 짧은 링크에서는 좌표를 읽기 어렵습니다.\n\n" +
+                "링크를 크롬에서 연 뒤 주소창의 긴 google.com/maps 주소를 복사해 주세요."
+              );
+            } else {
+              alert(
+                "링크에서 좌표를 찾지 못했습니다.\n\n" +
+                "긴 구글 지도 주소 또는 34.6911, 135.4870 형식의 좌표를 입력해 주세요."
+              );
+            }
+
+            return;
+          }
+
+          const newPin = {
+            id:
+              Date.now().toString() +
+              "-" +
+              Math.random()
+                .toString(16)
+                .slice(2),
+
+            name,
+            color,
+            googleUrl,
+            notionUrl,
+            lat: coordinates.lat,
+            lng: coordinates.lng
+          };
+
+          const savedPins =
+            loadPins();
+
+          savedPins.push(newPin);
+
+          savePins(savedPins);
+          createMarker(newPin);
+
+          const newMarker =
+            markerMap.get(newPin.id);
+
+          if (newMarker) {
+            newMarker.openPopup();
+          }
+
+          /*
+            새 핀을 추가해도 중앙과 확대 수준 유지
+          */
+          map.setView(
+            nakanoshimaStationCenter,
+            fixedZoom,
+            { animate: false }
+          );
+
+          this.reset();
+
+          document
+            .getElementById("pin-color")
+            .value = "#ea580c";
+        }
+      );
   </script>
 </body>
 </html>
+'''
+
+path = Path("/mnt/data/index.html")
+path.write_text(html, encoding="utf-8")
+print(path, path.stat().st_size)
