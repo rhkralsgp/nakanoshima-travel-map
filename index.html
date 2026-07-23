@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>삿포로 여행 지도 (나카노시마역 영역)</title>
+  <title>삿포로 여행 지도 (나카노시마역 고정)</title>
   
   <!-- Leaflet 지도 CSS -->
   <link
@@ -322,13 +322,13 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   
   <script>
-    /* 📍 나카노시마역 중심 좌표로 변경 (위도: 43.0372, 경도: 141.3622) */
+    /* 📍 나카노시마역 중심 좌표 (위도: 43.0372, 경도: 141.3622) */
     const nakanoshimaStation = [43.0372, 141.3622];
 
-    /* 고정 지도 생성 */
+    /* 고정 지도 생성 (이동 및 터치/확대 완전 차단) */
     const map = L.map("map", {
       center: nakanoshimaStation,
-      zoom: 14, // 반경 약 2km 영역 표시
+      zoom: 14,
       zoomControl: false,
       dragging: false,
       scrollWheelZoom: false,
@@ -432,6 +432,7 @@
       const safeGoogleUrl = escapeHtml(pin.googleUrl);
       const safeNotionUrl = escapeHtml(pin.notionUrl);
 
+      /* 🔒 autoPan: false 설정으로 팝업이 열릴 때 지도가 움직이는 현상을 차단 */
       marker.bindPopup(`
         <div class="popup-box">
           <div class="popup-title">${safeName}</div>
@@ -440,7 +441,9 @@
           <a href="${safeNotionUrl}" target="_blank" rel="noopener noreferrer" class="popup-link notion-btn">노션 설명으로 이동</a>
           <button type="button" class="delete-btn" onclick="deletePin('${pin.id}')">이 핀 삭제</button>
         </div>
-      `);
+      `, {
+        autoPan: false
+      });
 
       markerMap.set(pin.id, marker);
     }
@@ -501,6 +504,7 @@
 
       createMarker(newPin);
 
+      /* 새 핀 추가 시 팝업만 열고 지도는 나카노시마역 위치 그대로 고정 */
       const newMarker = markerMap.get(newPin.id);
       if (newMarker) {
         newMarker.openPopup();
