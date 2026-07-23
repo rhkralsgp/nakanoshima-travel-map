@@ -643,14 +643,20 @@
       attributionControl: true
     });
 
-    L.tileLayer(
-      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {
-        maxZoom: 19,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }
-    ).addTo(map);
+    const mapTiles = L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    subdomains: ["a", "b", "c"],
+    minZoom: 1,
+    maxZoom: 19,
+    tileSize: 256,
+    crossOrigin: true,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }
+);
+
+mapTiles.addTo(map);
 
     /*
       반경 2km 원을 기준으로 지도 범위 자동 설정
