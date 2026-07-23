@@ -426,14 +426,14 @@
     /*
       오도리역 중심 좌표
     */
-    const odoriStation = [43.037876410406795, 141.3610037533418];
+    const odoriStation = [43.0609, 141.3545];
 
     /*
       고정 지도 생성
     */
     const map = L.map("map", {
       center: odoriStation,
-      zoom: 17,
+      zoom: 15,
 
       zoomControl: false,
       dragging: false,
@@ -452,7 +452,7 @@
     L.tileLayer(
       "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
-        maxZoom: 19,
+        maxZoom: 20,
 
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -656,58 +656,52 @@
           ? pinColor
           : "#ea580c";
 
-      marker.bindPopup(
-  `
-    <div class="popup-box">
-      <div class="popup-title">
-        ${safeName}
-      </div>
+      marker.bindPopup(`
+        <div class="popup-box">
+          <div class="popup-title">
+            ${safeName}
+          </div>
 
-      <div class="popup-color">
-        <span
-          class="popup-color-dot"
-          style="background:${safeColor};"
-        ></span>
+          <div class="popup-color">
+            <span
+              class="popup-color-dot"
+              style="background:${safeColor};"
+            ></span>
 
-        선택한 핀 색상
-      </div>
+            선택한 핀 색상
+          </div>
 
-      <div class="popup-coords">
-        ${pin.lat}, ${pin.lng}
-      </div>
+          <div class="popup-coords">
+            ${pin.lat}, ${pin.lng}
+          </div>
 
-      <a
-        href="${safeGoogleUrl}"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="popup-link google-btn"
-      >
-        구글 지도에서 열기
-      </a>
+          <a
+            href="${safeGoogleUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="popup-link google-btn"
+          >
+            구글 지도에서 열기
+          </a>
 
-      <a
-        href="${safeNotionUrl}"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="popup-link notion-btn"
-      >
-        노션 설명으로 이동
-      </a>
+          <a
+            href="${safeNotionUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="popup-link notion-btn"
+          >
+            노션 설명으로 이동
+          </a>
 
-      <button
-        type="button"
-        class="delete-btn"
-        onclick="deletePin('${pin.id}')"
-      >
-        이 핀 삭제
-      </button>
-    </div>
-  `,
-  {
-    autoPan: false,
-    keepInView: false
-  }
-);
+          <button
+            type="button"
+            class="delete-btn"
+            onclick="deletePin('${pin.id}')"
+          >
+            이 핀 삭제
+          </button>
+        </div>
+      `);
 
       markerMap.set(pin.id, marker);
     }
