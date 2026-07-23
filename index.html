@@ -656,54 +656,58 @@
           ? pinColor
           : "#ea580c";
 
-      marker.bindPopup(`
-        <div class="popup-box">
-          <div class="popup-title">
-            ${safeName}
-          </div>
-          ,
-          {autoPan: false}
+      marker.bindPopup(
+  `
+    <div class="popup-box">
+      <div class="popup-title">
+        ${safeName}
+      </div>
 
-          <div class="popup-color">
-            <span
-              class="popup-color-dot"
-              style="background:${safeColor};"
-            ></span>
+      <div class="popup-color">
+        <span
+          class="popup-color-dot"
+          style="background:${safeColor};"
+        ></span>
 
-            선택한 핀 색상
-          </div>
+        선택한 핀 색상
+      </div>
 
-          <div class="popup-coords">
-            ${pin.lat}, ${pin.lng}
-          </div>
+      <div class="popup-coords">
+        ${pin.lat}, ${pin.lng}
+      </div>
 
-          <a
-            href="${safeGoogleUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="popup-link google-btn"
-          >
-            구글 지도에서 열기
-          </a>
+      <a
+        href="${safeGoogleUrl}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="popup-link google-btn"
+      >
+        구글 지도에서 열기
+      </a>
 
-          <a
-            href="${safeNotionUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="popup-link notion-btn"
-          >
-            노션 설명으로 이동
-          </a>
+      <a
+        href="${safeNotionUrl}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="popup-link notion-btn"
+      >
+        노션 설명으로 이동
+      </a>
 
-          <button
-            type="button"
-            class="delete-btn"
-            onclick="deletePin('${pin.id}')"
-          >
-            이 핀 삭제
-          </button>
-        </div>
-      `);
+      <button
+        type="button"
+        class="delete-btn"
+        onclick="deletePin('${pin.id}')"
+      >
+        이 핀 삭제
+      </button>
+    </div>
+  `,
+  {
+    autoPan: false,
+    keepInView: false
+  }
+);
 
       markerMap.set(pin.id, marker);
     }
